@@ -70,6 +70,17 @@ python src/coletor_tse.py --todas
 python atualizar.py
 ```
 
+Para ver ou alterar o site (Node 22+):
+
+```bash
+cd web
+npm install
+npm run dev      # servidor local com recarga automática
+npm run build    # gera web/dist
+```
+
+O `atualizar.py` grava os dados em `web/public/dados.json`. Ao dar *push* na `main`, o workflow `.github/workflows/pages.yml` compila e publica o site.
+
 Se o coletor falhar na primeira seção, confira os modelos de endereço (`URL_*`) e os padrões de linha do log (`RE_*`) no topo de `src/coletor_tse.py`. A opção `--calibrar arquivo.jez` mostra os tipos de linha de um log real. Use `--taxa` para reduzir a velocidade, se necessário.
 
 ## Estrutura
@@ -84,10 +95,11 @@ Se o coletor falhar na primeira seção, confira os modelos de endereço (`URL_*
 │   ├── coletor_tse.py  baixa os logs e grava logs_urna.sqlite
 │   ├── resumo.py       totais por UF e nacional
 │   ├── horarios.py     horário do último voto e distribuição após as 17h
-│   ├── gerar_mapa.py   gera docs/index.html e docs/mapa.svg
+│   ├── gerar_mapa.py   gera web/public/dados.json e docs/mapa.svg
 │   └── brasil_ufs.json malha simplificada dos estados
 ├── dados/              resumos em CSV/JSON (versionados)
-└── docs/               site publicado no GitHub Pages
+├── web/                site (Vite), publicado no GitHub Pages pelo Actions
+└── docs/               mapa.svg usado no README
 ```
 
 ## Fontes
