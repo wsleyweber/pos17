@@ -4,6 +4,7 @@
 
 ![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-3776AB?style=flat-square)
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)
+![Node.js 24+](https://img.shields.io/badge/Node.js-24%2B-339933?style=flat-square&logo=node.js&logoColor=white)
 
 </div>
 
@@ -52,12 +53,17 @@ Os resumos ficam em [`dados/`](dados/):
 | `resumo_uf.csv` | Votos totais e após as 17h (Brasília), por UF |
 | `horarios_uf.csv` | Horário do último voto, % nos primeiros 10 e 30 minutos, por UF |
 | `resumo_geral.json` | Totais nacionais e cobertura de seções |
+| `fusos_inferidos.csv` | Municípios cujo fuso deduzido dos logs difere do padrão do UF |
+
+O site lê `web/public/dados.json`, gerado a partir desses arquivos pelo `atualizar.py`.
 
 O banco com uma linha por seção (`logs_urna.sqlite`) não está versionado por ser grande. Ele pode ser gerado de novo com o coletor.
 
 ## Como reproduzir
 
-Requer Python 3.10+.
+São duas partes independentes: os **scripts em Python** (pasta `src/`) calculam os dados, e o **site** (pasta `web/`, feita com Vite) só lê o resultado.
+
+### 1. Dados (Python 3.10+)
 
 ```bash
 pip install -r requirements.txt
@@ -66,11 +72,10 @@ pip install -r requirements.txt
 python src/coletor_tse.py --ufs rr
 python src/coletor_tse.py --todas
 
-# 2. Recalcular os resumos e gerar o mapa
+# 2. Recalcular os resumos em dados/ e gerar web/public/dados.json e docs/mapa.svg
 python atualizar.py
 ```
-
-Para ver ou alterar o site (Node 22+):
+### 2. Site (Node 24+)
 
 ```bash
 cd web
@@ -79,9 +84,7 @@ npm run dev      # servidor local com recarga automática
 npm run build    # gera web/dist
 ```
 
-O `atualizar.py` grava os dados em `web/public/dados.json`. Ao dar *push* na `main`, o workflow `.github/workflows/pages.yml` compila e publica o site.
-
-Se o coletor falhar na primeira seção, confira os modelos de endereço (`URL_*`) e os padrões de linha do log (`RE_*`) no topo de `src/coletor_tse.py`. A opção `--calibrar arquivo.jez` mostra os tipos de linha de um log real. Use `--taxa` para reduzir a velocidade, se necessário.
+O push na `main` aciona o workflow `.github/workflows/pages.yml`, que compila o site e publica no GitHub Pages. Na primeira vez, em *Settings -> Pages*, escolha **GitHub Actions** como fonte.
 
 ## Estrutura
 
@@ -89,17 +92,26 @@ Se o coletor falhar na primeira seção, confira os modelos de endereço (`URL_*
 .
 ├── README.md
 ├── LICENSE
-├── atualizar.py        recalcula os resumos e regera o mapa
-├── requirements.txt
-├── src/
-│   ├── coletor_tse.py  baixa os logs e grava logs_urna.sqlite
-│   ├── resumo.py       totais por UF e nacional
-│   ├── horarios.py     horário do último voto e distribuição após as 17h
-│   ├── gerar_mapa.py   gera web/public/dados.json e docs/mapa.svg
-│   └── brasil_ufs.json malha simplificada dos estados
-├── dados/              resumos em CSV/JSON (versionados)
-├── web/                site (Vite), publicado no GitHub Pages pelo Actions
-└── docs/               mapa.svg usado no README
+├── atualizar.py          recalcula os resumos e gera dados.json e mapa.svg
+├── requirements.txt      dependências dos scripts em Python
+├── src/                  scripts em Python
+│   ├── coletor_tse.py    baixa os logs e grava logs_urna.sqlite
+│   ├── fuso.py           deduz o fuso de cada município a partir dos logs
+│   ├── resumo.py         totais por UF e nacional
+│   ├── horarios.py       horário do último voto e distribuição após as 17h
+│   ├── gerar_mapa.py     gera web/public/dados.json e docs/mapa.svg
+│   └── brasil_ufs.json   malha simplificada dos estados
+├── dados/                resumos em CSV/JSON (versionados)
+├── web/                  site (Vite), sem código Python
+│   ├── index.html
+│   ├── main.js           desenha o mapa e os painéis
+│   ├── style.css
+│   ├── public/dados.json lido pelo site (gerado por atualizar.py)
+│   ├── package.json
+│   └── vite.config.js
+├── docs/mapa.svg         imagem estática usada neste README
+└── .github/workflows/
+    └── pages.yml         compila web/ e publica no GitHub Pages
 ```
 
 ## Fontes
@@ -111,3 +123,9 @@ Arquivos públicos do TSE, referentes ao 2º turno de 2026:
 - Comparecimento e abstenção por município: `https://resultados.tse.jus.br/oficial/ele2026/6258/dados/`
 - Regras de acesso: [Informações técnicas sobre a divulgação de resultados (TSE)](https://www.tse.jus.br/eleicoes/informacoes-tecnicas-sobre-a-divulgacao-de-resultados)
 - Malha dos estados: dados abertos de geometria dos estados brasileiros, simplificados para este mapa.
+
+## Licenças
+
+- **Código** (scripts em Python e site): licença MIT, veja [`LICENSE`](LICENSE).
+- **Dados em `dados/` e `web/public/dados.json`**: resumos calculados por este projeto a partir de arquivos públicos do TSE. Ao reutilizá-los, cite este repositório e o TSE como fonte, e lembre que são dados preliminares.
+- **Dependências**: o coletor usa o [httpx](https://github.com/encode/httpx) (BSD-3-Clause). O site usa o [Vite](https://github.com/vitejs/vite) (MIT) apenas na compilação, e ele não é enviado ao navegador.
