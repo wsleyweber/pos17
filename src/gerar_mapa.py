@@ -273,7 +273,7 @@ def main():
 
     sa, sg = geral.get("secoes_analisadas"), geral.get("secoes_total")
     cob = f"{sa:,.0f} de {sg:,.0f} seções analisadas".replace(",", ".") if sa and sg else ""
-    sub = "Apenas Brasil, sem exterior" + (" · " + cob if cob else "") + " · dados preliminares · os dados trabalhadores são referentes apenas aos votos computados após as 17 horas no horário de Brasília"
+    sub = "Apenas Brasil, sem exterior" + (" · " + cob if cob else "") + " · dados preliminares · contagem apenas dos votos computados após as 17 horas (Brasília)"
     nota = ("Fonte: arquivos de log de urna publicados pelo TSE (dados preliminares). Corte: 17h de Brasília, que é 15h no Acre e 16h em "
             "AM, RO, RR, MT e MS, no horário local registrado pela própria urna (o oeste do Amazonas e Fernando de Noronha têm o corte ajustado ao fuso do município). Votos depois desse horário são esperados: quem já está na fila "
             "pode votar e, segundo a imprensa, uma decisão do STF em 25/10 permitiu que seções ainda abertas funcionassem até as 19h (Brasília). "
