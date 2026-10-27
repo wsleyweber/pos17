@@ -1,0 +1,16 @@
+{
+  "criterio_corte": "fechamento local por UF",
+  "votos_total": 127697456,
+  "votos_apos": 34330,
+  "pct_votos_apos": 0.02688385585379242,
+  "sem_bio_apos": 5468,
+  "pct_sem_bio_apos": 15.927759976696766,
+  "sem_bio_antes": 15852243,
+  "votos_antes": 127663126,
+  "pct_sem_bio_antes": 12.417244898107853,
+  "secoes_analisadas": 497896,
+  "secoes_total": 514464,
+  "pct_secoes_analisadas": 96.77956086334515,
+  "secoes_com_voto_apos": 29854,
+  "secoes_sem_log_ou_erro": 16568
+}
