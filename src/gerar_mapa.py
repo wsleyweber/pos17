@@ -6,9 +6,9 @@ Entradas (na mesma pasta ou via argumentos):
   resumo_uf.csv, resumo_geral.json   (saidas do resumo.py)
   brasil_ufs.json                    (malha simplificada dos estados, ja incluida)
 
-Saidas (pasta docs/, a que o GitHub Pages publica):
-  docs/index.html   mapa interativo, arquivo unico, sem dependencias externas
-  docs/mapa.svg     imagem estatica para o README (sem JavaScript)
+Saidas:
+  web/public/dados.json   dados que o site (Vite, pasta web/) carrega
+  docs/mapa.svg           imagem estatica para o README (sem JavaScript)
 
 Uso:
   python gerar_mapa.py
@@ -234,248 +234,22 @@ def gerar_svg(malha, dados, geral, titulo, rodape):
 
 
 # ----------------------------------------------------------------------------
-# HTML interativo
+# Dados para o site (web/)
 # ----------------------------------------------------------------------------
-HTML = r"""<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__TITULO__</title>
-<meta name="description" content="Mapa interativo dos votos computados após as 17 horas (Brasília) por UF, a partir dos logs de urna do TSE.">
-<style>
-:root{
-  --bg:#f4f6f9; --card:#fff; --ink:#16212e; --mut:#5a6878; --line:#dde3ea; --sem:#b9c1cc;
-  --c0:__C0L__; --c1:__C1L__; --stroke:#fff; --acc:#0b4f9c; --focus:#0b4f9c;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0f1b2d; --card:#1a2c46; --ink:#e9f0f8; --mut:#a5b6cb; --line:#2c4263; --sem:#4a5668;
-    --c0:__C0D__; --c1:__C1D__; --stroke:#0f1b2d; --acc:#8fd0ff; --focus:#8fd0ff;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0f1b2d; --card:#1a2c46; --ink:#e9f0f8; --mut:#a5b6cb; --line:#2c4263; --sem:#4a5668;
-  --c0:__C0D__; --c1:__C1D__; --stroke:#0f1b2d; --acc:#8fd0ff; --focus:#8fd0ff;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
-h1{font-size:1.35rem;margin:0 0 4px}
-.sub{color:var(--mut);margin:0 0 16px;font-size:.92rem}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.tile .k{color:var(--mut);font-size:.85rem}
-.tile .v{font-size:2rem;font-weight:700;line-height:1.15;margin:2px 0}
-.tile .d{color:var(--mut);font-size:.82rem}
-.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.seg button{font:inherit;font-size:.88rem;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--bg);font-weight:600}
-.seg button:focus-visible,.row:focus-visible,path:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
-svg.mapa{width:100%;height:auto;display:block}
-svg.mapa path{stroke:var(--stroke);stroke-width:1.2;stroke-linejoin:round;cursor:pointer;transition:opacity .12s}
-svg.mapa.dim path{opacity:.45}
-svg.mapa.dim path.on{opacity:1;stroke:var(--ink);stroke-width:2.2}
-svg.mapa text{font-size:12px;font-weight:600;pointer-events:none}
-.legenda{display:flex;align-items:center;gap:10px;margin:8px 4px 2px;font-size:.82rem;color:var(--mut)}
-.legenda .bar{flex:1;max-width:260px;height:12px;border-radius:3px;background:linear-gradient(90deg,var(--c0),var(--c1))}
-.legenda .sem{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
-.legenda .sem i{width:12px;height:12px;border-radius:3px;background:var(--sem);display:inline-block}
-.det{min-height:150px;margin-bottom:12px}
-.det h2{font-size:1.05rem;margin:0 0 8px}
-.det dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin:0;font-size:.92rem}
-.det dt{color:var(--mut)} .det dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-.det .vazio{color:var(--mut);font-size:.92rem}
-.lista{max-height:430px;overflow:auto}
-.row{display:grid;grid-template-columns:26px 34px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:.92rem}
-.row:hover,.row.on{background:color-mix(in srgb,var(--acc) 14%,transparent)}
-.row .n{color:var(--mut);font-size:.8rem;text-align:right}
-.row .b{height:8px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
-.row .b i{position:absolute;left:0;top:0;bottom:0;background:var(--acc);border-radius:4px}
-.row .vv{font-variant-numeric:tabular-nums;font-weight:600;min-width:72px;text-align:right}
-.nota{color:var(--mut);font-size:.8rem;margin-top:16px}
-.aviso{background:color-mix(in srgb,var(--acc) 14%,transparent);border-left:4px solid var(--acc);border-radius:8px;padding:9px 12px;margin:0 0 12px;font-size:.88rem}
-@media (max-width:860px){.grid{grid-template-columns:1fr}.tiles{grid-template-columns:1fr}.tile .v{font-size:1.7rem}}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>__TITULO__</h1>
-  <p class="sub" id="sub"></p>
-  <div class="tiles" id="tiles"></div>
-  <div class="seg" id="seg" role="group" aria-label="Métrica exibida no mapa"></div>
-  <p class="aviso" id="aviso" hidden></p>
-  <div class="grid">
-    <div class="card">
-      <svg class="mapa" id="mapa" viewBox="0 0 __W__ __H__" role="img" aria-label="Mapa do Brasil por UF"></svg>
-      <div class="legenda"><span id="lo"></span><div class="bar"></div><span id="hi"></span><span class="sem"><i></i>sem dados / sem voto após</span></div>
-    </div>
-    <div>
-      <div class="card det" id="det" aria-live="polite"></div>
-      <div class="card lista" id="lista"></div>
-    </div>
-  </div>
-  <p class="nota" id="nota"></p>
-</div>
-<script>
-const D = __DATA__;
-const $ = s => document.querySelector(s);
-const NS = "http://www.w3.org/2000/svg";
-const fmt = (v, t) => v == null ? "—" :
-  t === "int" ? Math.round(v).toLocaleString("pt-BR") :
-  t === "min" ? "+" + Math.round(v) + " min" :
-  v.toLocaleString("pt-BR", {minimumFractionDigits: t === "pct3" ? 3 : 1, maximumFractionDigits: t === "pct3" ? 3 : 1}) + "%";
-const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const rgb = h => [1,3,5].map(i => parseInt(h.slice(i, i+2), 16));
-const mix = (a, b, t) => { const A = rgb(a), B = rgb(b); return "rgb(" + A.map((x, i) => Math.round(x + (B[i]-x)*t)).join(",") + ")"; };
-
-const txt = (u, v) => (metrica.txt && u.m[metrica.txt]) ? u.m[metrica.txt] + " " + u.rel : fmt(v, metrica.t);
-const AVISO_LOCAL = "Horários no relógio local de cada estado. A ordem e a cor mostram os minutos após o fechamento, que são comparáveis entre estados.";
-let metrica = D.metricas[0], ativo = null, fixo = null;
-const porUF = Object.fromEntries(D.ufs.map(u => [u.uf, u]));
-
-function dominio() {
-  const v = D.ufs.map(u => u.m[metrica.k]).filter(x => x != null);
-  return v.length ? [Math.min(...v), Math.max(...v)] : [0, 1];
-}
-function corDe(v, lo, hi) {
-  if (v == null) return css("--sem");
-  const t = hi === lo ? .5 : (v - lo) / (hi - lo);
-  return mix(css("--c0"), css("--c1"), Math.max(0, Math.min(1, t)));
-}
-
-function montar() {
-  $("#sub").textContent = D.meta.subtitulo;
-  const g = D.geral;
-  const tiles = [
-    ["Número de votos", fmt(g.votos_apos, "int"), fmt(g.pct_votos_apos, "pct3") + " dos " + fmt(g.votos_total, "int") + " votos analisados"],
-    ["Votos nos primeiros 10 minutos ", fmt(g.pct_primeiros_10min, "pct1"), g.votos_primeiros_10min == null ? "" : fmt(g.votos_primeiros_10min, "int") + " de " + fmt(g.votos_apos_h, "int") + " votos"],
-    ["Último voto mais tardio", g.mais_tardio ? g.mais_tardio.hora : "—", g.mais_tardio ? g.mais_tardio.uf + " · Horário local (" + porUF[g.mais_tardio.uf].rel + ") · " + fmt(g.mais_tardio.min, "min") + " após o fechamento" : ""]
-  ];
-  $("#tiles").innerHTML = tiles.map(t => '<div class="tile"><div class="k">' + t[0] + '</div><div class="v">' + t[1] + '</div><div class="d">' + t[2] + '</div></div>').join("");
-  $("#seg").innerHTML = "";
-  D.metricas.forEach(m => {
-    const b = document.createElement("button");
-    b.textContent = m.curto; b.title = m.rotulo;
-    b.setAttribute("aria-pressed", m === metrica);
-    b.onclick = () => { metrica = m; pintar(); };
-    $("#seg").appendChild(b);
-  });
-  const svg = $("#mapa");
-  svg.innerHTML = "";
-  D.ufs.forEach(u => {
-    const p = document.createElementNS(NS, "path");
-    p.setAttribute("d", u.d); p.dataset.uf = u.uf;
-    p.setAttribute("tabindex", "0"); p.setAttribute("role", "button");
-    p.addEventListener("mouseenter", () => { ativo = u.uf; detalhe(); });
-    p.addEventListener("mouseleave", () => { ativo = null; detalhe(); });
-    p.addEventListener("focus", () => { ativo = u.uf; detalhe(); });
-    p.addEventListener("blur", () => { ativo = null; detalhe(); });
-    p.addEventListener("click", () => { fixo = fixo === u.uf ? null : u.uf; detalhe(); });
-    p.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); p.click(); } });
-    svg.appendChild(p);
-  });
-  D.ufs.forEach(u => {
-    if (u.larg < 26) return;
-    const t = document.createElementNS(NS, "text");
-    t.setAttribute("x", u.cx); t.setAttribute("y", u.cy + 4); t.setAttribute("text-anchor", "middle");
-    t.textContent = u.uf; t.dataset.uf = u.uf; svg.appendChild(t);
-  });
-  $("#nota").textContent = D.meta.nota;
-  pintar();
-}
-
-function pintar() {
-  const [lo, hi] = dominio();
-  [...$("#seg").children].forEach((b, i) => b.setAttribute("aria-pressed", D.metricas[i] === metrica));
-  const av = $("#aviso"); av.hidden = metrica.k !== "ultimo_min_apos"; av.textContent = AVISO_LOCAL;
-  document.querySelectorAll("#mapa path").forEach(p => {
-    const v = porUF[p.dataset.uf].m[metrica.k];
-    p.setAttribute("fill", corDe(v, lo, hi));
-    p.setAttribute("aria-label", porUF[p.dataset.uf].nome + ": " + txt(porUF[p.dataset.uf], v));
-  });
-  document.querySelectorAll("#mapa text").forEach(t => {
-    const v = porUF[t.dataset.uf].m[metrica.k];
-    t.setAttribute("fill", luminancia(corDe(v, lo, hi)) > .45 ? "#0b1f38" : "#f1f6fb");
-  });
-  $("#lo").textContent = fmt(lo, metrica.t); $("#hi").textContent = fmt(hi, metrica.t);
-  lista(); detalhe();
-}
-function luminancia(c) {
-  const m = c.match(/\d+/g); if (!m) return .5;
-  const [r, g, b] = m.map(Number); return (0.299*r + 0.587*g + 0.114*b) / 255;
-}
-
-function lista() {
-  const [lo, hi] = dominio();
-  const ord = [...D.ufs].sort((a, b) => (b.m[metrica.k] ?? -Infinity) - (a.m[metrica.k] ?? -Infinity));
-  $("#lista").innerHTML = "";
-  ord.forEach((u, i) => {
-    const v = u.m[metrica.k];
-    const r = document.createElement("div");
-    r.className = "row"; r.dataset.uf = u.uf; r.tabIndex = 0;
-    const w = v == null ? 0 : (hi === lo ? 100 : 8 + 92 * (v - lo) / (hi - lo));
-    r.innerHTML = '<span class="n">' + (i + 1) + '</span><strong>' + u.uf + '</strong><span class="b"><i style="width:' + w + '%"></i></span><span class="vv">' + txt(u, v) + '</span>';
-    r.onmouseenter = () => { ativo = u.uf; detalhe(); };
-    r.onmouseleave = () => { ativo = null; detalhe(); };
-    r.onfocus = r.onmouseenter; r.onblur = r.onmouseleave;
-    r.onclick = () => { fixo = fixo === u.uf ? null : u.uf; detalhe(); };
-    r.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); r.click(); } };
-    $("#lista").appendChild(r);
-  });
-}
-
-function detalhe() {
-  const uf = ativo || fixo;
-  document.querySelectorAll("#mapa path, .row").forEach(el => el.classList.toggle("on", el.dataset.uf === uf));
-  $("#mapa").classList.toggle("dim", !!uf);
-  const el = $("#det");
-  if (!uf) { el.innerHTML = '<div class="vazio">Passe o mouse (ou toque) em um estado para ver os detalhes.</div>'; return; }
-  const u = porUF[uf], m = u.m;
-  const cob = m.secoes_total ? " (" + fmt(100 * m.secoes_analisadas / m.secoes_total, "pct1") + ")" : "";
-  const ap = "após as " + u.corte;
-  el.innerHTML = '<h2>' + u.nome + ' (' + u.uf + ')</h2><dl>' +
-    '<dt>Votos ' + ap + '</dt><dd>' + fmt(m.votos_apos, "int") + '</dd>' +
-    '<dt>Porcentagem dos votos ' + ap + '</dt><dd>' + fmt(m.pct_votos_apos, "pct3") + '</dd>' +
-    '<dt>Nos primeiros 10 minutos ' + ap + '</dt><dd>' + fmt(m.pct_primeiros_10min, "pct1") + (m.votos_primeiros_10min != null ? " (" + fmt(m.votos_primeiros_10min, "int") + ")" : "") + '</dd>' +
-    '<dt>Último voto no estado (no horário local)</dt><dd>' + (m.ultimo_voto ? m.ultimo_voto + " (" + fmt(m.ultimo_min_apos, "min") + ")" : "—") + '</dd>' +
-    '<dt> </dt> <dd> </dd>' +
-    '<dt> </dt> <dd> </dd>' +
-    '<dt> </dt> <dd> </dd>' +
-    '<dt>Votos totais analisados</dt><dd>' + fmt(m.votos, "int") + '</dd>' +
-    '<dt>Seções analisadas</dt><dd>' + fmt(m.secoes_analisadas, "int") + (m.secoes_total ? " de " + fmt(m.secoes_total, "int") : "") + cob + '</dd>' +
-    '<dt>Seções com voto ' + ap + '</dt><dd>' + fmt(m.secoes_com_voto_apos, "int") + '</dd></dl>';
-}
-
-montar();
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pintar);
-</script>
-</body>
-</html>
-"""
 
 
-def gerar_html(malha, dados, geral, titulo, subtitulo, nota):
+def gerar_dados(malha, dados, geral, titulo, subtitulo, nota):
+    """Monta o JSON lido pelo site em web/ (web/src/main.js)."""
     ufs = []
     for m in malha:
         h, nome = FUSO_ROTULO.get(m["uf"], ("17h", "Brasília"))
         ufs.append({**m, "corte": "%s (%s)" % (h, nome), "rel": nome, "m": dados.get(m["uf"], {})})
-    payload = {
-        "meta": {"subtitulo": subtitulo, "nota": nota},
+    return {
+        "meta": {"titulo": titulo, "subtitulo": subtitulo, "nota": nota},
         "geral": geral,
         "metricas": [{"k": k, "rotulo": r, "curto": c, "t": t, "txt": x} for k, r, c, t, x in METRICAS],
         "ufs": ufs,
     }
-    s = HTML
-    for a, b in {"__TITULO__": html.escape(titulo), "__W__": str(W), "__H__": str(H),
-                 "__C0L__": ESCALA_CLARA[0], "__C1L__": ESCALA_CLARA[1],
-                 "__C0D__": ESCALA_ESCURA[0], "__C1D__": ESCALA_ESCURA[1]}.items():
-        s = s.replace(a, b)
-    # "</" dentro de <script> poderia encerrar o bloco antes da hora
-    dados_js = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-    return s.replace("__DATA__", dados_js)
 
 
 def main():
@@ -484,7 +258,8 @@ def main():
     ap.add_argument("--geral", default="resumo_geral.json")
     ap.add_argument("--horarios", default="horarios_uf.csv", help="saida do horarios.py")
     ap.add_argument("--malha", default=str(AQUI / "brasil_ufs.json"))
-    ap.add_argument("--saida", default="docs")
+    ap.add_argument("--saida", default="docs", help="pasta do mapa.svg (usado no README)")
+    ap.add_argument("--json", default="web/public/dados.json", help="dados lidos pelo site")
     ap.add_argument("--titulo", default="Votos após as 17 horas (Brasília) · 2º turno 2026")
     ap.add_argument("--fonte", default="Fonte: logs de urna do TSE · dados preliminares")
     a = ap.parse_args()
@@ -506,9 +281,12 @@ def main():
 
     out = Path(a.saida)
     out.mkdir(parents=True, exist_ok=True)
-    (out / "index.html").write_text(gerar_html(malha, dados, geral, a.titulo, sub, nota), encoding="utf-8")
     (out / "mapa.svg").write_text(gerar_svg(malha, dados, geral, a.titulo, a.fonte), encoding="utf-8")
-    print("gerado:", out / "index.html", "e", out / "mapa.svg")
+    dest = Path(a.json)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    payload = gerar_dados(malha, dados, geral, a.titulo, sub, nota)
+    dest.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    print("gerado:", out / "mapa.svg", "e", dest)
 
 
 if __name__ == "__main__":

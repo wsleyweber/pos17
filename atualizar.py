@@ -2,7 +2,7 @@
 """Recalcula os resumos e regera o mapa a partir do banco local.
 
 Uso (na raiz do repositorio):  python atualizar.py [--db logs_urna.sqlite]
-Depois:  git add dados docs && git commit -m "Atualiza dados" && git push
+Depois:  git add dados docs web/public && git commit -m "Atualiza dados" && git push
 """
 import argparse
 import subprocess
@@ -31,4 +31,4 @@ rodar([RAIZ / "src" / "horarios.py", db, "--corte-local"], dados)
 rodar([RAIZ / "src" / "gerar_mapa.py",
        "--csv", "dados/resumo_uf.csv", "--geral", "dados/resumo_geral.json",
        "--horarios", "dados/horarios_uf.csv", "--saida", "docs", "--titulo", a.titulo], RAIZ)
-print("\nPronto. Confira docs/index.html no navegador antes de publicar.")
+print("\nPronto. Para conferir o site: cd web && npm run dev")

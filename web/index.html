@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Votos após as 17 horas (Brasília) · 2º turno 2026</title>
+<meta name="description" content="Mapa interativo dos votos computados após as 17 horas (Brasília) por UF, a partir dos logs de urna do TSE.">
+</head>
+<body>
+<div class="wrap">
+  <h1>Votos após as 17 horas (Brasília) · 2º turno 2026</h1>
+  <p class="sub" id="sub"></p>
+  <div class="tiles" id="tiles"></div>
+  <div class="seg" id="seg" role="group" aria-label="Métrica exibida no mapa"></div>
+  <p class="aviso" id="aviso" hidden></p>
+  <div class="grid">
+    <div class="card">
+      <svg class="mapa" id="mapa" viewBox="0 0 760 760" role="img" aria-label="Mapa do Brasil por UF"></svg>
+      <div class="legenda"><span id="lo"></span><div class="bar"></div><span id="hi"></span><span class="sem"><i></i>sem dados / sem voto após</span></div>
+    </div>
+    <div>
+      <div class="card det" id="det" aria-live="polite"></div>
+      <div class="card lista" id="lista"></div>
+    </div>
+  </div>
+  <p class="nota" id="nota"></p>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
