@@ -1,3 +1,9 @@
 logs_urna.sqlite
 node_modules/
 web/dist/
+.agents
+.codex
+.github/agents
+.github/hooks
+.github/skills
+.impeccable
