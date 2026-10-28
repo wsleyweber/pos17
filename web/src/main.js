@@ -91,14 +91,25 @@ function pintar() {
   });
   document.querySelectorAll("#mapa text").forEach(t => {
     const v = porUF[t.dataset.uf].m[metrica.k];
-    t.setAttribute("fill", luminancia(corDe(v, lo, hi)) > .45 ? "#0b1f38" : "#f1f6fb");
+    const fill = corDe(v, lo, hi);
+    t.setAttribute("fill", contraste("#0b1f38", fill) > contraste("#f1f6fb", fill) ? "#0b1f38" : "#f1f6fb");
   });
   $("#lo").textContent = fmt(lo, metrica.t); $("#hi").textContent = fmt(hi, metrica.t);
   lista(); detalhe();
 }
 function luminancia(c) {
-  const m = c.match(/\d+/g); if (!m) return .5;
-  const [r, g, b] = m.map(Number); return (0.299*r + 0.587*g + 0.114*b) / 255;
+  const canais = c.startsWith("#")
+    ? [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16))
+    : c.match(/\d+/g).map(Number);
+  const linear = canais.map(v => {
+    const s = v / 255;
+    return s <= .04045 ? s / 12.92 : ((s + .055) / 1.055) ** 2.4;
+  });
+  return .2126 * linear[0] + .7152 * linear[1] + .0722 * linear[2];
+}
+function contraste(a, b) {
+  const [claro, escuro] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
+  return (claro + .05) / (escuro + .05);
 }
 
 function lista() {
@@ -134,9 +145,6 @@ function detalhe() {
     '<dt>Porcentagem dos votos ' + ap + '</dt><dd>' + fmt(m.pct_votos_apos, "pct3") + '</dd>' +
     '<dt>Nos primeiros 10 minutos ' + ap + '</dt><dd>' + fmt(m.pct_primeiros_10min, "pct1") + (m.votos_primeiros_10min != null ? " (" + fmt(m.votos_primeiros_10min, "int") + ")" : "") + '</dd>' +
     '<dt>Último voto no estado (no horário local)</dt><dd>' + (m.ultimo_voto ? m.ultimo_voto + " (" + fmt(m.ultimo_min_apos, "min") + ")" : "—") + '</dd>' +
-    '<dt> </dt> <dd> </dd>' +
-    '<dt> </dt> <dd> </dd>' +
-    '<dt> </dt> <dd> </dd>' +
     '<dt>Votos totais analisados</dt><dd>' + fmt(m.votos, "int") + '</dd>' +
     '<dt>Seções analisadas</dt><dd>' + fmt(m.secoes_analisadas, "int") + (m.secoes_total ? " de " + fmt(m.secoes_total, "int") : "") + cob + '</dd>' +
     '<dt>Seções com voto ' + ap + '</dt><dd>' + fmt(m.secoes_com_voto_apos, "int") + '</dd></dl>';
